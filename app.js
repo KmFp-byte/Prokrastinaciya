@@ -211,6 +211,7 @@
       try { await Store.signOut(); } catch (err) { /* выходим локально в любом случае */ }
       state.items = []; state.shopping = []; state.loaded = false; state.entered = false;
       if (window.KvestHero) window.KvestHero.reset();
+      if (window.KvestMenu) window.KvestMenu.reset();
       renderAll();
       show("screen-auth");
       authView("login");
@@ -244,6 +245,7 @@
     state.loaded = false;
     renderAll();
     if (state.tab === "hero" && window.KvestHero) window.KvestHero.show();
+    if (window.KvestMenu) window.KvestMenu.load();
     await loadData();
   }
 
@@ -409,6 +411,10 @@
     }
     root.appendChild(autoSec);
 
+    // v3: недостающие продукты для меню
+    var menuSec = window.KvestMenu ? window.KvestMenu.shoppingSection() : null;
+    if (menuSec) root.appendChild(menuSec);
+
     var manSec = h("section", { class: "shop-sec px-box", "aria-labelledby": "shop-man-title" }, [
       h("h3", { class: "shop-title", id: "shop-man-title" }, [h("span", { class: "shop-title-art", art: "bag" }), "Свои записи", h("span", { class: "chip-count", text: String(manual.filter(function (m) { return !m.done; }).length) })])
     ]);
@@ -444,7 +450,8 @@
 
   function renderCounts() {
     $("#count-inventory").textContent = String(state.items.length);
-    var n = shoppingAuto().length + state.shopping.filter(function (m) { return !m.done; }).length;
+    var n = shoppingAuto().length + state.shopping.filter(function (m) { return !m.done; }).length +
+      (window.KvestMenu ? window.KvestMenu.shoppingCount() : 0);
     $("#count-shopping").textContent = String(n);
   }
 
@@ -454,6 +461,7 @@
     renderInventory();
     renderShopping();
     renderCounts();
+    if (window.KvestMenu) window.KvestMenu.refresh();
     if (fkey) {
       var again = document.querySelector('[data-fkey="' + fkey + '"]');
       if (again) again.focus({ preventScroll: true });
@@ -557,7 +565,7 @@
 
   /* ---------- вкладки ---------- */
 
-  var TABS = ["inventory", "shopping", "hero"];
+  var TABS = ["inventory", "shopping", "menu", "hero"];
 
   function setTab(tab, focus) {
     if (TABS.indexOf(tab) < 0) tab = "inventory";
@@ -571,6 +579,7 @@
     TABS.forEach(function (t) { var p = document.getElementById("panel-" + t); if (p) p.hidden = t !== tab; });
     try { sessionStorage.setItem("kvest.tab", tab); } catch (e) { /* ignore */ }
     if (tab === "hero" && state.entered && window.KvestHero) window.KvestHero.show();
+    if (tab === "menu" && state.entered && window.KvestMenu) window.KvestMenu.show();
   }
 
   function bindTabs() {
@@ -787,6 +796,7 @@
       if (event === "SIGNED_OUT" && !$("#screen-app").hidden) {
         state.entered = false;
         if (window.KvestHero) window.KvestHero.reset();
+        if (window.KvestMenu) window.KvestMenu.reset();
         show("screen-auth"); authView("login");
       }
     });
@@ -823,6 +833,19 @@
 
   /* общие помощники для hero.js */
   window.KvestUI = { toast: toast, errText: errText };
+
+  /* мост для menu.js: запасы читаются и меняются только здесь */
+  window.KvestApp = {
+    items: function () { return state.items; },
+    setStatus: function (item, status, msg) { return changeStatus(item, status, msg); },
+    addFoodItem: async function (name) {
+      var res = await Store.addItem({ name: name, category: "food", status: "ok" }, null);
+      state.items = [res.item].concat(state.items);
+      renderAll();
+      return res.item;
+    },
+    refresh: function () { renderAll(); }
+  };
 
   bindAuth();
   bindTabs();

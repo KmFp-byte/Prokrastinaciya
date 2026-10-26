@@ -85,6 +85,9 @@
   var LS_HERO = "kvest.demo.hero";
   var LS_GOALS = "kvest.demo.goals";
   var LS_LOG = "kvest.demo.log";
+  var LS_DISHES = "kvest.demo.dishes";
+  var LS_PLAN = "kvest.demo.plan";
+  var LS_SKIPS = "kvest.demo.skips";
   var memory = {}; // запасной вариант, если localStorage недоступен
 
   function lsGet(k, fallback) {
@@ -253,6 +256,64 @@
 
     async deleteLog(id) {
       lsSet(LS_LOG, lsGet(LS_LOG, []).filter(function (l) { return l.id !== id; }));
+    },
+
+    /* --- меню (v3) --- */
+    async listDishes() { return lsGet(LS_DISHES, []).slice().sort(byCreatedAsc); },
+
+    async addDish(f) {
+      var list = lsGet(LS_DISHES, []);
+      var d = { id: uuid(), user_id: "demo", name: f.name, ingredients: f.ingredients || [], created_at: new Date().toISOString() };
+      list.push(d);
+      lsSet(LS_DISHES, list);
+      return d;
+    },
+
+    async updateDish(id, patch) {
+      var found = null;
+      var list = lsGet(LS_DISHES, []).map(function (d) {
+        if (d.id !== id) return d;
+        found = Object.assign({}, d, patch);
+        return found;
+      });
+      if (!found) throw KvestError("notfound", "dish not found");
+      lsSet(LS_DISHES, list);
+      return found;
+    },
+
+    async deleteDish(id) {
+      lsSet(LS_DISHES, lsGet(LS_DISHES, []).filter(function (d) { return d.id !== id; }));
+      // как on delete cascade
+      lsSet(LS_PLAN, lsGet(LS_PLAN, []).filter(function (p) { return p.dish_id !== id; }));
+    },
+
+    async listPlan(from, to) {
+      return lsGet(LS_PLAN, []).filter(function (p) { return p.day >= from && p.day <= to; });
+    },
+
+    async setPlan(day, dishId) {
+      var plan = lsGet(LS_PLAN, []).filter(function (p) { return p.day !== day; });
+      var row = { user_id: "demo", day: day, dish_id: dishId };
+      plan.push(row);
+      lsSet(LS_PLAN, plan);
+      return row;
+    },
+
+    async clearPlan(day) {
+      lsSet(LS_PLAN, lsGet(LS_PLAN, []).filter(function (p) { return p.day !== day; }));
+    },
+
+    async listSkips(weekStart) {
+      return lsGet(LS_SKIPS, []).filter(function (s) { return s.week_start === weekStart; });
+    },
+
+    async addSkip(weekStart, name) {
+      var skips = lsGet(LS_SKIPS, []);
+      if (!skips.some(function (s) { return s.week_start === weekStart && s.name === name; })) {
+        skips.push({ user_id: "demo", week_start: weekStart, name: name });
+        lsSet(LS_SKIPS, skips);
+      }
+      return { week_start: weekStart, name: name };
     }
   };
 
@@ -423,6 +484,49 @@
 
     async deleteLog(id) {
       check(await sb.from("goal_log").delete().eq("id", id));
+    },
+
+    /* --- меню (v3) --- */
+    async listDishes() {
+      return check(await sb.from("dishes").select("*").order("created_at", { ascending: true }));
+    },
+
+    async addDish(f) {
+      return check(await sb.from("dishes").insert({ name: f.name, ingredients: f.ingredients || [] }).select().single());
+    },
+
+    async updateDish(id, patch) {
+      return check(await sb.from("dishes").update(patch).eq("id", id).select().single());
+    },
+
+    async deleteDish(id) {
+      check(await sb.from("dishes").delete().eq("id", id)); // meal_plan удаляется каскадом
+    },
+
+    async listPlan(from, to) {
+      return check(await sb.from("meal_plan").select("day,dish_id").gte("day", from).lte("day", to));
+    },
+
+    async setPlan(day, dishId) {
+      if (!currentUser) await remote.getSession();
+      if (!currentUser) throw KvestError("auth", "no session");
+      return check(await sb.from("meal_plan").upsert({ user_id: currentUser.id, day: day, dish_id: dishId }, { onConflict: "user_id,day" }).select().single());
+    },
+
+    async clearPlan(day) {
+      check(await sb.from("meal_plan").delete().eq("day", day));
+    },
+
+    async listSkips(weekStart) {
+      return check(await sb.from("menu_skips").select("week_start,name").eq("week_start", weekStart));
+    },
+
+    async addSkip(weekStart, name) {
+      if (!currentUser) await remote.getSession();
+      if (!currentUser) throw KvestError("auth", "no session");
+      check(await sb.from("menu_skips").upsert({ user_id: currentUser.id, week_start: weekStart, name: name },
+        { onConflict: "user_id,week_start,name", ignoreDuplicates: true }));
+      return { week_start: weekStart, name: name };
     }
   };
 
@@ -508,6 +612,19 @@
     /** { goal_id, kind, stat, points, day }. Повторная привычка за день → ошибка с code "duplicate". */
     addLog: function (f) { return backend.addLog(f); },
     deleteLog: function (id) { return backend.deleteLog(id); },
+
+    /* меню (v3) */
+    listDishes: function () { return backend.listDishes(); },
+    /** { name, ingredients: [строки] } */
+    addDish: function (f) { return backend.addDish(f); },
+    updateDish: function (id, patch) { return backend.updateDish(id, patch); },
+    deleteDish: function (id) { return backend.deleteDish(id); },
+    /** Строки плана { day, dish_id } в диапазоне дат (включительно, YYYY-MM-DD). */
+    listPlan: function (from, to) { return backend.listPlan(from, to); },
+    setPlan: function (day, dishId) { return backend.setPlan(day, dishId); },
+    clearPlan: function (day) { return backend.clearPlan(day); },
+    listSkips: function (weekStart) { return backend.listSkips(weekStart); },
+    addSkip: function (weekStart, name) { return backend.addSkip(weekStart, name); },
 
     /** Уменьшает фото до 800px по длинной стороне и сжимает в JPEG 0.8. */
     async downscale(file, maxSide, quality) {

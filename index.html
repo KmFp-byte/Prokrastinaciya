@@ -124,6 +124,10 @@
         <span>Покупки</span>
         <span class="tab-count tab-count-hot" id="count-shopping">0</span>
       </button>
+      <button type="button" class="tab" role="tab" id="tab-menu" aria-controls="panel-menu" aria-selected="false" tabindex="-1" data-tab="menu">
+        <span class="tab-art" data-art="bowl"></span>
+        <span>Меню</span>
+      </button>
       <button type="button" class="tab" role="tab" id="tab-hero" aria-controls="panel-hero" aria-selected="false" tabindex="-1" data-tab="hero">
         <span class="tab-art" data-art="star"></span>
         <span>Герой</span>
@@ -181,6 +185,70 @@
         </form>
 
         <div id="shop-lists"></div>
+      </section>
+
+      <!-- Меню (v3) -->
+      <section id="panel-menu" class="panel" role="tabpanel" aria-labelledby="tab-menu" hidden>
+        <div id="menu-loading" class="hero-loading px-box" hidden>
+          <span class="hero-loading-art" data-art="bowl"></span>
+          <p>Открываем книгу рецептов…</p>
+        </div>
+        <div id="menu-error" class="inline-error px-box" hidden>
+          <p>Не удалось загрузить меню.</p>
+          <button type="button" class="btn btn-sm" id="menu-retry">Повторить</button>
+        </div>
+
+        <div id="menu-view" class="menu-layout" hidden>
+          <div class="menu-left">
+            <section class="roll-card px-box" aria-labelledby="roll-title">
+              <div class="roll-head">
+                <div>
+                  <h2 class="hero-title" id="roll-title">Что приготовить сегодня?</h2>
+                  <p class="hero-sub">Выберу ужин — сначала из того, что уже есть дома.</p>
+                </div>
+                <button type="button" class="btn btn-primary btn-roll" id="btn-roll">
+                  <span class="btn-roll-art" data-art="dice"></span> Выбрать ужин
+                </button>
+              </div>
+              <div id="roll-result" class="roll-result" aria-live="polite"></div>
+            </section>
+
+            <section class="week-card px-box" aria-labelledby="week-title">
+              <div class="week-head">
+                <h2 class="sec-title" id="week-title">Ужины на неделю</h2>
+                <div class="week-nav">
+                  <button type="button" class="icon-btn" id="week-prev" aria-label="Предыдущая неделя"><span aria-hidden="true">‹</span></button>
+                  <button type="button" class="week-label-btn" id="week-today" title="К текущей неделе">
+                    <span id="week-label" class="week-label"></span>
+                    <span id="week-rel" class="week-rel"></span>
+                  </button>
+                  <button type="button" class="icon-btn" id="week-next" aria-label="Следующая неделя"><span aria-hidden="true">›</span></button>
+                </div>
+              </div>
+              <ol id="week-days" class="week-days"></ol>
+              <button type="button" class="btn btn-ghost btn-wide" id="btn-fill-week">Заполнить неделю</button>
+              <p class="week-hint">Заполняются только пустые дни, начиная с сегодня. Недостающие продукты появятся в «Покупках».</p>
+            </section>
+          </div>
+
+          <section class="dishes-card px-box" aria-labelledby="dishes-title">
+            <h2 class="sec-title" id="dishes-title">Мои блюда <span class="chip-count" id="dish-count">0</span></h2>
+            <form id="form-dish" class="dish-form" novalidate>
+              <div class="field">
+                <label for="dish-name">Название</label>
+                <input id="dish-name" type="text" maxlength="80" autocomplete="off" placeholder="Например, гречка с курицей">
+              </div>
+              <div class="field">
+                <label for="dish-ings">Ингредиенты через запятую</label>
+                <input id="dish-ings" type="text" maxlength="400" autocomplete="off" placeholder="гречка, курица, лук">
+              </div>
+              <div id="dish-preview" class="ing-chips ing-preview" aria-live="polite"></div>
+              <p class="form-msg" role="alert"></p>
+              <button type="submit" class="btn btn-primary">Добавить блюдо</button>
+            </form>
+            <div id="dish-list"></div>
+          </section>
+        </div>
       </section>
 
       <!-- Герой (v2) -->
@@ -331,6 +399,7 @@
   <script src="store.js"></script>
   <script src="hero-art.js"></script>
   <script src="hero.js"></script>
+  <script src="menu.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

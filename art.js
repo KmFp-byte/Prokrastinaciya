@@ -101,6 +101,18 @@
       '<path d="M23 26v-5a9 9 0 0 1 18 0v5" stroke="' + C.pinkD + '" stroke-width="4" stroke-linecap="round" fill="none"/>' +
       '<rect x="12" y="23" width="40" height="34" rx="10" fill="' + C.pink + '"/>' +
       '<path d="M32 36c-1.8-2.4-6-1.8-6 1.4 0 2.4 3 4.4 6 6.3 3-1.9 6-3.9 6-6.3 0-3.2-4.2-3.8-6-1.4z" fill="#fff"/>',
+    bowl:
+      '<path d="M32 8c3 3 3 6 0 9M24 10c3 3 3 6 0 9M40 10c3 3 3 6 0 9" stroke="#ffc8d7" stroke-width="2.4" stroke-linecap="round" fill="none"/>' +
+      '<ellipse cx="32" cy="30" rx="22" ry="7" fill="#fff"/>' +
+      '<circle cx="24" cy="28" r="2" fill="#fff6d6"/><circle cx="36" cy="27" r="2" fill="#fff6d6"/><ellipse cx="42" cy="30" rx="4" ry="2.5" fill="' + C.mint + '"/>' +
+      '<path d="M8 31h48c0 13-10 23-24 23S8 44 8 31z" fill="' + C.pink + '"/>' +
+      '<rect x="22" y="53" width="20" height="5" rx="2.5" fill="' + C.pinkD + '"/>' +
+      face(32, 40, 1),
+    dice:
+      '<rect x="10" y="10" width="44" height="44" rx="12" fill="#fff" stroke="' + C.pinkL + '" stroke-width="3"/>' +
+      '<circle cx="22" cy="22" r="4" fill="' + C.pink + '"/><circle cx="42" cy="22" r="4" fill="' + C.mint + '"/>' +
+      '<circle cx="32" cy="32" r="4" fill="' + C.butter + '"/>' +
+      '<circle cx="22" cy="42" r="4" fill="' + C.mint + '"/><circle cx="42" cy="42" r="4" fill="' + C.pink + '"/>',
     oops:
       '<circle cx="32" cy="32" r="24" fill="' + C.pink + '"/>' +
       '<rect x="29" y="16" width="6" height="20" rx="3" fill="#fff"/>' +
