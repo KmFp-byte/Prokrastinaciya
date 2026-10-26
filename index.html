@@ -5,33 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Домашний квест</title>
   <meta name="description" content="Домашний квест — личный инвентарь запасов и список покупок.">
-  <meta name="theme-color" content="#1a1140">
-  <meta name="color-scheme" content="dark">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 14' shape-rendering='crispEdges'%3E%3Crect width='10' height='14' fill='%23b69cff'/%3E%3Crect x='1' y='1' width='8' height='12' fill='%23ff9a3c'/%3E%3Crect x='6' y='7' width='1' height='1' fill='%23fff3b0'/%3E%3C/svg%3E">
+  <meta name="theme-color" content="#fff4f6">
+  <meta name="color-scheme" content="light">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 54C14 42 8 32 8 23c0-7 5-12 12-12 5 0 9 3 12 7 3-4 7-7 12-7 7 0 12 5 12 12 0 9-6 19-24 31z' fill='%23ff9fb7'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <a class="skip-link" href="#main">Перейти к содержимому</a>
 
-  <!-- Ночная декорация: рисуется из art.js -->
+  <!-- Мягкий фон: рисуется из art.js -->
   <div id="scene" class="scene" aria-hidden="true"></div>
 
   <!-- Загрузка -->
   <section id="screen-loading" class="screen screen-center">
     <div class="loading-card">
-      <div class="loading-art" data-art="moon"></div>
-      <p class="loading-text">Открываем дверь…</p>
+      <div class="loading-art" data-art="heart"></div>
+      <p class="loading-text">Открываем домик…</p>
     </div>
   </section>
 
   <!-- Фатальная ошибка запуска -->
   <section id="screen-fatal" class="screen screen-center" hidden>
     <div class="auth-card px-box">
-      <div class="auth-art" data-art="door"></div>
-      <h1 class="auth-title">Дверь заело</h1>
+      <div class="auth-art" data-art="house"></div>
+      <h1 class="auth-title">Ой, не открылось</h1>
       <p id="fatal-text" class="auth-lead">Не удалось подключиться к серверу. Проверьте интернет и попробуйте ещё раз.</p>
       <button type="button" class="btn btn-primary btn-wide" id="fatal-retry">Попробовать снова</button>
     </div>
@@ -40,13 +40,13 @@
   <!-- Вход / пароль -->
   <section id="screen-auth" class="screen screen-center" hidden>
     <div class="auth-card px-box">
-      <div class="auth-art" data-art="door"></div>
+      <div class="auth-art" data-art="house"></div>
       <p class="auth-kicker">Домашний квест</p>
 
       <!-- Вход -->
       <form id="form-login" class="auth-form" novalidate>
         <h1 class="auth-title">Вход в квест</h1>
-        <p class="auth-lead">Только для приглашённых героев. Аккаунт создаёт администратор.</p>
+        <p class="auth-lead">Только для приглашённых. Аккаунт создаёт администратор.</p>
         <div class="field">
           <label for="login-email">Почта</label>
           <input id="login-email" name="email" type="email" autocomplete="email" inputmode="email" required>
@@ -96,7 +96,7 @@
   <div id="screen-app" class="screen app" hidden>
     <header class="topbar px-box">
       <div class="brand">
-        <span class="brand-art" data-art="door"></span>
+        <span class="brand-art" data-art="house"></span>
         <div class="brand-text">
           <p class="brand-title">Домашний квест</p>
           <p class="brand-sub">запасы · покупки · порядок</p>
@@ -129,24 +129,34 @@
     <main id="main" tabindex="-1">
       <!-- Запасы -->
       <section id="panel-inventory" class="panel" role="tabpanel" aria-labelledby="tab-inventory">
-        <div class="hero px-box">
-          <div class="hero-text">
-            <h1 class="hero-title">Мои запасы</h1>
-            <div class="summary" id="summary" aria-live="polite"></div>
+        <div class="inv-layout">
+          <aside class="inv-side" aria-label="Категории">
+            <div class="side-card px-box">
+              <p class="side-title">Категории</p>
+              <div class="chips" id="chips" role="group" aria-label="Фильтр по категориям"></div>
+              <span class="side-cat" data-art="cat"></span>
+            </div>
+          </aside>
+
+          <div class="inv-main">
+            <div class="hero px-box">
+              <div class="hero-text">
+                <h1 class="hero-title">Мои запасы</h1>
+                <div class="summary" id="summary" aria-live="polite"></div>
+              </div>
+              <button type="button" class="btn btn-primary btn-add" id="btn-add">
+                <span class="btn-plus" aria-hidden="true">+</span> Добавить
+              </button>
+            </div>
+
+            <div id="inv-error" class="inline-error px-box" hidden>
+              <p>Не удалось загрузить данные. Проверьте интернет.</p>
+              <button type="button" class="btn btn-sm" id="btn-retry">Повторить</button>
+            </div>
+
+            <div id="grid" class="grid" aria-live="polite"></div>
           </div>
-          <button type="button" class="btn btn-primary btn-add" id="btn-add">
-            <span class="btn-plus" aria-hidden="true">+</span> Добавить
-          </button>
         </div>
-
-        <div class="chips" id="chips" role="group" aria-label="Фильтр по категориям"></div>
-
-        <div id="inv-error" class="inline-error px-box" hidden>
-          <p>Не удалось загрузить данные. Проверьте интернет.</p>
-          <button type="button" class="btn btn-sm" id="btn-retry">Повторить</button>
-        </div>
-
-        <div id="grid" class="grid" aria-live="polite"></div>
       </section>
 
       <!-- Покупки -->

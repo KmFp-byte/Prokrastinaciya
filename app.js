@@ -91,7 +91,7 @@
   function toast(text, kind) {
     var box = document.getElementById("toasts");
     var t = h("div", { class: "toast px-box" + (kind ? " toast-" + kind : ""), role: kind === "error" ? "alert" : "status" }, [
-      h("span", { class: "toast-icon", art: kind === "error" ? "key" : "sparkle" }),
+      h("span", { class: "toast-icon", art: kind === "error" ? "oops" : "sparkle" }),
       h("span", { text: text })
     ]);
     while (box.children.length >= 2) box.removeChild(box.firstChild);
@@ -276,10 +276,10 @@
         class: "chip chip-" + c.id,
         "aria-pressed": state.filter === c.id ? "true" : "false",
         dataset: { fkey: "chip-" + c.id },
-        onclick: function () { state.filter = c.id; renderInventory(); }
+        onclick: function () { state.filter = c.id; renderAll(); }
       }, [
         c.id !== "all" ? h("span", { class: "chip-art", art: c.id }) : h("span", { class: "chip-art", art: "star" }),
-        h("span", { text: c.label }),
+        h("span", { class: "chip-label", text: c.label }),
         h("span", { class: "chip-count", text: String(counts[c.id]) })
       ]));
     });
@@ -463,6 +463,16 @@
     state.items = state.items.map(function (i) { return i.id === updated.id ? updated : i; });
   }
 
+  /** Короткая «радостная» анимация карточки после смены статуса. */
+  function popCard(id) {
+    var btn = document.querySelector('[data-fkey^="st-' + id + '-"]');
+    var c = btn && btn.closest(".card");
+    if (!c) return;
+    c.classList.remove("pop");
+    void c.offsetWidth;
+    c.classList.add("pop");
+  }
+
   async function changeStatus(item, status, okMsg) {
     if (item.status === status && !item.skip_shopping) return;
     var before = Object.assign({}, item);
@@ -471,6 +481,7 @@
     try {
       replaceItem(await Store.setStatus(item.id, status));
       renderAll();
+      popCard(item.id);
       if (okMsg) toast(okMsg);
     } catch (err) {
       replaceItem(before);
