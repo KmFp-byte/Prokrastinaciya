@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Нет интернета · Домашний квест</title>
+  <meta name="theme-color" content="#ffe4ec">
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      min-height: 100vh; min-height: 100dvh; display: grid; place-items: center;
+      padding: calc(24px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
+      font-family: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #36403c;
+      background: linear-gradient(160deg, #fff0f4 0%, #fffaf7 50%, #e9f8f0 100%);
+    }
+    .card {
+      width: 100%; max-width: 380px; padding: 28px 24px; text-align: center; background: #fff;
+      border-radius: 28px; box-shadow: 0 2px 6px rgba(120, 70, 90, 0.05), 0 22px 48px rgba(214, 120, 150, 0.2);
+    }
+    img { width: 96px; height: 96px; border-radius: 24px; display: block; margin: 0 auto 12px; }
+    h1 { margin: 0 0 8px; font-size: 24px; }
+    p { margin: 0 0 18px; color: #5f6b65; line-height: 1.5; }
+    button {
+      font: inherit; font-weight: 800; min-height: 48px; padding: 10px 24px; border: 0; border-radius: 999px; cursor: pointer;
+      color: #5a1631; background: linear-gradient(135deg, #ffbfd2 0%, #ff9fbb 55%, #ff8fae 100%);
+      box-shadow: 0 4px 14px rgba(249, 120, 160, 0.35);
+    }
+    button:focus-visible { outline: 3px solid #3fa877; outline-offset: 3px; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <img src="icons/icon-192.png" alt="">
+    <h1>Нет интернета</h1>
+    <p>Домашний квест работает только онлайн. Проверьте подключение — и попробуйте ещё раз.</p>
+    <button type="button" onclick="location.href='./'">Обновить</button>
+  </main>
+</body>
+</html>

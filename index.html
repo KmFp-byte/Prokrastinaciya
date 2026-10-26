@@ -5,9 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Домашний квест</title>
   <meta name="description" content="Домашний квест — личный инвентарь запасов и список покупок.">
-  <meta name="theme-color" content="#fff4f6">
+  <meta name="theme-color" content="#ffe4ec">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Квест">
+  <meta name="application-name" content="Квест">
   <meta name="color-scheme" content="light">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 54C14 42 8 32 8 23c0-7 5-12 12-12 5 0 9 3 12 7 3-4 7-7 12-7 7 0 12 5 12 12 0 9-6 19-24 31z' fill='%23ff9fb7'/%3E%3C/svg%3E">
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
@@ -103,6 +110,9 @@
         </div>
       </div>
       <div class="topbar-right">
+        <button type="button" class="btn btn-sm install-pill" id="btn-install" title="Установить приложение" hidden>
+          <span class="install-pill-art" data-art="house"></span> Установить приложение
+        </button>
         <span id="user-email" class="user-email"></span>
         <button type="button" class="btn btn-ghost btn-sm" id="btn-logout">Выйти</button>
       </div>
@@ -392,6 +402,13 @@
     </div>
   </dialog>
 
+  <!-- Подсказка для iPhone (Safari) -->
+  <div id="ios-hint" class="ios-hint" role="note" hidden>
+    <span class="ios-hint-art" data-art="house"></span>
+    <p>Чтобы установить: нажми «Поделиться» <span class="ios-share" aria-hidden="true">⬆︎</span> → «На экран Домой»</p>
+    <button type="button" class="icon-btn icon-sm" id="ios-hint-close" aria-label="Скрыть подсказку"><span aria-hidden="true">✕</span></button>
+  </div>
+
   <div id="toasts" class="toasts" aria-live="polite" aria-atomic="false"></div>
 
   <script src="config.js"></script>
@@ -401,5 +418,6 @@
   <script src="hero.js"></script>
   <script src="menu.js"></script>
   <script src="app.js"></script>
+  <script src="pwa.js"></script>
 </body>
 </html>
