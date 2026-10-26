@@ -5,7 +5,7 @@
    После обновления файлов на хостинге увеличьте CACHE_VERSION. */
 "use strict";
 
-var CACHE_VERSION = "kvest-v3-1";
+var CACHE_VERSION = "kvest-v3-2";
 var SHELL = [
   "./",
   "./index.html",
@@ -20,8 +20,8 @@ var SHELL = [
   "./pwa.js",
   "./offline.html",
   "./manifest.webmanifest",
-  "./icons/icon-192.png",
-  "./icons/favicon-32.png"
+  "./icon-192.png",
+  "./favicon-32.png"
 ];
 var SHELL_URLS = SHELL.map(function (p) { return new URL(p, self.registration.scope).href; });
 
