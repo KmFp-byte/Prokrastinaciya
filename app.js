@@ -209,7 +209,8 @@
 
     $("#btn-logout").addEventListener("click", async function () {
       try { await Store.signOut(); } catch (err) { /* выходим локально в любом случае */ }
-      state.items = []; state.shopping = []; state.loaded = false;
+      state.items = []; state.shopping = []; state.loaded = false; state.entered = false;
+      if (window.KvestHero) window.KvestHero.reset();
       renderAll();
       show("screen-auth");
       authView("login");
@@ -239,8 +240,10 @@
     $("#btn-logout").hidden = Store.mode === "demo";
     $("#demo-banner").hidden = Store.mode !== "demo";
     show("screen-app");
+    state.entered = true;
     state.loaded = false;
     renderAll();
+    if (state.tab === "hero" && window.KvestHero) window.KvestHero.show();
     await loadData();
   }
 
@@ -554,7 +557,10 @@
 
   /* ---------- вкладки ---------- */
 
+  var TABS = ["inventory", "shopping", "hero"];
+
   function setTab(tab, focus) {
+    if (TABS.indexOf(tab) < 0) tab = "inventory";
     state.tab = tab;
     $all(".tab").forEach(function (b) {
       var on = b.dataset.tab === tab;
@@ -562,9 +568,9 @@
       b.tabIndex = on ? 0 : -1;
       if (on && focus) b.focus();
     });
-    $("#panel-inventory").hidden = tab !== "inventory";
-    $("#panel-shopping").hidden = tab !== "shopping";
+    TABS.forEach(function (t) { var p = document.getElementById("panel-" + t); if (p) p.hidden = t !== tab; });
     try { sessionStorage.setItem("kvest.tab", tab); } catch (e) { /* ignore */ }
+    if (tab === "hero" && state.entered && window.KvestHero) window.KvestHero.show();
   }
 
   function bindTabs() {
@@ -573,13 +579,14 @@
       b.addEventListener("keydown", function (e) {
         if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
           e.preventDefault();
-          setTab(state.tab === "inventory" ? "shopping" : "inventory", true);
+          var i = TABS.indexOf(state.tab) + (e.key === "ArrowRight" ? 1 : -1);
+          setTab(TABS[(i + TABS.length) % TABS.length], true);
         }
       });
     });
     var saved = null;
     try { saved = sessionStorage.getItem("kvest.tab"); } catch (e) { /* ignore */ }
-    setTab(saved === "shopping" ? "shopping" : "inventory");
+    setTab(TABS.indexOf(saved) >= 0 ? saved : "inventory");
   }
 
   /* ---------- форма предмета ---------- */
@@ -777,7 +784,11 @@
 
     Store.onAuthChange(function (event) {
       if (event === "PASSWORD_RECOVERY" && !recoveryShown) { recoveryShown = true; showSetPassword("recovery"); }
-      if (event === "SIGNED_OUT" && !$("#screen-app").hidden) { show("screen-auth"); authView("login"); }
+      if (event === "SIGNED_OUT" && !$("#screen-app").hidden) {
+        state.entered = false;
+        if (window.KvestHero) window.KvestHero.reset();
+        show("screen-auth"); authView("login");
+      }
     });
 
     if (link.error) {
@@ -809,6 +820,9 @@
     show("screen-auth");
     authView("login");
   }
+
+  /* общие помощники для hero.js */
+  window.KvestUI = { toast: toast, errText: errText };
 
   bindAuth();
   bindTabs();

@@ -124,6 +124,11 @@
         <span>Покупки</span>
         <span class="tab-count tab-count-hot" id="count-shopping">0</span>
       </button>
+      <button type="button" class="tab" role="tab" id="tab-hero" aria-controls="panel-hero" aria-selected="false" tabindex="-1" data-tab="hero">
+        <span class="tab-art" data-art="star"></span>
+        <span>Герой</span>
+        <span class="tab-count tab-count-hero" id="count-hero" hidden></span>
+      </button>
     </nav>
 
     <main id="main" tabindex="-1">
@@ -176,6 +181,70 @@
         </form>
 
         <div id="shop-lists"></div>
+      </section>
+
+      <!-- Герой (v2) -->
+      <section id="panel-hero" class="panel" role="tabpanel" aria-labelledby="tab-hero" hidden>
+        <div id="hero-loading" class="hero-loading px-box" hidden>
+          <span class="hero-loading-art" data-art="heart"></span>
+          <p>Зовём героя…</p>
+        </div>
+        <div id="hero-error" class="inline-error px-box" hidden>
+          <p>Не удалось загрузить героя.</p>
+          <button type="button" class="btn btn-sm" id="hero-retry">Повторить</button>
+        </div>
+
+        <div id="hero-view" class="hero-layout" hidden>
+          <div class="hero-left">
+            <div class="hero-stage px-box" id="hero-stage">
+              <div class="stage-frame">
+                <canvas id="hero-canvas" class="pixel-canvas stage-canvas" width="128" height="128" role="img" aria-label="Ваш герой"></canvas>
+              </div>
+              <p id="hero-mood" class="mood" aria-live="polite"></p>
+              <div class="level-box">
+                <div class="level-row">
+                  <span class="level-badge" id="hero-level">Уровень 1</span>
+                  <span class="level-points" id="hero-points">0 / 10 баллов</span>
+                </div>
+                <div class="bar level-bar" id="hero-bar" role="progressbar" aria-label="Прогресс до следующего уровня" aria-valuemin="0">
+                  <span id="hero-bar-fill"></span>
+                </div>
+                <p class="level-total" id="hero-total"></p>
+                <p class="level-next" id="hero-next"></p>
+              </div>
+              <button type="button" class="btn btn-primary btn-wide" id="btn-edit-look">Изменить внешность</button>
+            </div>
+          </div>
+          <div class="hero-right">
+            <section class="stats px-box" aria-labelledby="stats-title">
+              <h2 class="sec-title" id="stats-title">Характеристики</h2>
+              <div id="stats-list" class="stats-list"></div>
+            </section>
+            <div id="goals-root"></div>
+          </div>
+        </div>
+
+        <div id="hero-creator" class="creator" hidden>
+          <div class="creator-head">
+            <h2 class="hero-title" id="creator-title">Создай своего героя</h2>
+            <p class="hero-sub" id="creator-lead"></p>
+          </div>
+          <div class="creator-layout">
+            <div class="creator-preview px-box">
+              <div class="stage-frame">
+                <canvas id="creator-canvas" class="pixel-canvas stage-canvas" width="128" height="128" role="img" aria-label="Предпросмотр героя"></canvas>
+              </div>
+              <div class="creator-actions">
+                <button type="button" class="btn btn-ghost" id="creator-cancel">Отмена</button>
+                <button type="button" class="btn btn-primary" id="creator-save">Готово!</button>
+              </div>
+            </div>
+            <div class="creator-panel px-box">
+              <div class="part-tabs" id="part-tabs" role="tablist" aria-label="Части внешности"></div>
+              <div id="part-body" class="part-body" role="tabpanel"></div>
+            </div>
+          </div>
+        </div>
       </section>
     </main>
 
@@ -243,11 +312,25 @@
     </form>
   </dialog>
 
+  <!-- Новый уровень -->
+  <dialog id="levelup-dialog" class="dialog levelup" aria-labelledby="levelup-title">
+    <div class="dialog-body levelup-body">
+      <div class="confetti" id="confetti" aria-hidden="true"></div>
+      <p class="levelup-kicker">Новый уровень!</p>
+      <canvas id="levelup-canvas" class="pixel-canvas levelup-canvas" width="128" height="128" role="img" aria-label="Ваш герой радуется"></canvas>
+      <h2 id="levelup-title" class="dialog-title">Уровень 2!</h2>
+      <ul id="levelup-list" class="levelup-list"></ul>
+      <button type="button" class="btn btn-primary btn-wide" id="levelup-ok">Ура!</button>
+    </div>
+  </dialog>
+
   <div id="toasts" class="toasts" aria-live="polite" aria-atomic="false"></div>
 
   <script src="config.js"></script>
   <script src="art.js"></script>
   <script src="store.js"></script>
+  <script src="hero-art.js"></script>
+  <script src="hero.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -56,6 +56,10 @@
     });
   }
 
+  function byCreatedAsc(a, b) {
+    return a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0;
+  }
+
   function byCreatedDesc(a, b) {
     return a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : 0;
   }
@@ -78,6 +82,9 @@
   var LS_ITEMS = "kvest.demo.items";
   var LS_SHOP = "kvest.demo.shopping";
   var LS_PHOTO = "kvest.demo.photo.";
+  var LS_HERO = "kvest.demo.hero";
+  var LS_GOALS = "kvest.demo.goals";
+  var LS_LOG = "kvest.demo.log";
   var memory = {}; // запасной вариант, если localStorage недоступен
 
   function lsGet(k, fallback) {
@@ -190,6 +197,62 @@
 
     async deleteShopping(id) {
       lsSet(LS_SHOP, lsGet(LS_SHOP, []).filter(function (e) { return e.id !== id; }));
+    },
+
+    /* --- герой (v2) --- */
+    async getHero() { return lsGet(LS_HERO, null); },
+
+    async saveHero(fields) {
+      var row = Object.assign({ user_id: "demo", look: {}, background: null, last_visit: null, prev_visit: null, created_at: new Date().toISOString() },
+        lsGet(LS_HERO, null) || {}, fields);
+      lsSet(LS_HERO, row);
+      return row;
+    },
+
+    async listGoals() { return lsGet(LS_GOALS, []).slice().sort(byCreatedAsc); },
+
+    async addGoal(f) {
+      var goals = lsGet(LS_GOALS, []);
+      var g = { id: uuid(), user_id: "demo", kind: f.kind, title: f.title, stat: f.stat, archived: false, created_at: new Date().toISOString() };
+      goals.push(g);
+      lsSet(LS_GOALS, goals);
+      return g;
+    },
+
+    async updateGoal(id, patch) {
+      var found = null;
+      var goals = lsGet(LS_GOALS, []).map(function (g) {
+        if (g.id !== id) return g;
+        found = Object.assign({}, g, patch);
+        return found;
+      });
+      if (!found) throw KvestError("notfound", "goal not found");
+      lsSet(LS_GOALS, goals);
+      return found;
+    },
+
+    async deleteGoal(id) {
+      lsSet(LS_GOALS, lsGet(LS_GOALS, []).filter(function (g) { return g.id !== id; }));
+      // как on delete set null: очки остаются
+      lsSet(LS_LOG, lsGet(LS_LOG, []).map(function (l) { return l.goal_id === id ? Object.assign({}, l, { goal_id: null }) : l; }));
+    },
+
+    async listLog() { return lsGet(LS_LOG, []).slice().sort(byCreatedAsc); },
+
+    async addLog(f) {
+      var log = lsGet(LS_LOG, []);
+      // как частичный unique-индекс: привычка — не больше раза в день
+      if (f.kind === "habit" && f.goal_id && log.some(function (l) { return l.kind === "habit" && l.goal_id === f.goal_id && l.day === f.day; })) {
+        throw KvestError("duplicate", "already logged today");
+      }
+      var row = { id: uuid(), user_id: "demo", goal_id: f.goal_id || null, kind: f.kind, stat: f.stat, points: f.points, day: f.day, created_at: new Date().toISOString() };
+      log.push(row);
+      lsSet(LS_LOG, log);
+      return row;
+    },
+
+    async deleteLog(id) {
+      lsSet(LS_LOG, lsGet(LS_LOG, []).filter(function (l) { return l.id !== id; }));
     }
   };
 
@@ -309,6 +372,57 @@
 
     async deleteShopping(id) {
       check(await sb.from("shopping_items").delete().eq("id", id));
+    },
+
+    /* --- герой (v2) --- */
+    async getHero() {
+      return check(await sb.from("heroes").select("*").maybeSingle());
+    },
+
+    async saveHero(fields) {
+      if (!currentUser) await remote.getSession();
+      if (!currentUser) throw KvestError("auth", "no session");
+      var row = Object.assign({ user_id: currentUser.id }, fields);
+      return check(await sb.from("heroes").upsert(row, { onConflict: "user_id" }).select().single());
+    },
+
+    async listGoals() {
+      return check(await sb.from("goals").select("*").order("created_at", { ascending: true }));
+    },
+
+    async addGoal(f) {
+      return check(await sb.from("goals").insert({ kind: f.kind, title: f.title, stat: f.stat }).select().single());
+    },
+
+    async updateGoal(id, patch) {
+      return check(await sb.from("goals").update(patch).eq("id", id).select().single());
+    },
+
+    async deleteGoal(id) {
+      check(await sb.from("goals").delete().eq("id", id));
+    },
+
+    /** Весь журнал, постранично (PostgREST по умолчанию отдаёт не больше 1000 строк). */
+    async listLog() {
+      var all = [], from = 0, size = 1000;
+      for (;;) {
+        var rows = check(await sb.from("goal_log").select("id,goal_id,kind,stat,points,day,created_at")
+          .order("created_at", { ascending: true }).range(from, from + size - 1));
+        all = all.concat(rows || []);
+        if (!rows || rows.length < size) break;
+        from += size;
+      }
+      return all;
+    },
+
+    async addLog(f) {
+      var res = await sb.from("goal_log").insert({ goal_id: f.goal_id, kind: f.kind, stat: f.stat, points: f.points, day: f.day }).select().single();
+      if (res.error && res.error.code === "23505") throw KvestError("duplicate", res.error.message, res.error);
+      return check(res);
+    },
+
+    async deleteLog(id) {
+      check(await sb.from("goal_log").delete().eq("id", id));
     }
   };
 
@@ -381,6 +495,19 @@
     addShopping: function (name) { return backend.addShopping(name); },
     updateShopping: function (id, patch) { return backend.updateShopping(id, patch); },
     deleteShopping: function (id) { return backend.deleteShopping(id); },
+
+    /* герой, цели и журнал очков (v2) */
+    getHero: function () { return backend.getHero(); },
+    /** Upsert строки героя: { look, background, last_visit, prev_visit } (можно частично). */
+    saveHero: function (fields) { return backend.saveHero(fields); },
+    listGoals: function () { return backend.listGoals(); },
+    addGoal: function (f) { return backend.addGoal(f); },
+    updateGoal: function (id, patch) { return backend.updateGoal(id, patch); },
+    deleteGoal: function (id) { return backend.deleteGoal(id); },
+    listLog: function () { return backend.listLog(); },
+    /** { goal_id, kind, stat, points, day }. Повторная привычка за день → ошибка с code "duplicate". */
+    addLog: function (f) { return backend.addLog(f); },
+    deleteLog: function (id) { return backend.deleteLog(id); },
 
     /** Уменьшает фото до 800px по длинной стороне и сжимает в JPEG 0.8. */
     async downscale(file, maxSide, quality) {
