@@ -115,6 +115,19 @@
   }
   function currentLevel() { return levelInfo(totalPoints()).level; }
 
+  /* Последний «увиденный» уровень — чтобы отпраздновать уровни, набранные вне вкладки (раскраски и т.п.). */
+  function seenKey() { return "kvest.hero.seenLevel." + Store.mode; }
+  function getSeen() { try { var v = parseInt(localStorage.getItem(seenKey()), 10); return isNaN(v) ? null : v; } catch (e) { return null; } }
+  function setSeen(v) { try { localStorage.setItem(seenKey(), String(v)); } catch (e) { /* ignore */ } }
+  function heroTabVisible() { var p = document.getElementById("panel-hero"); return !!p && !p.hidden; }
+  function checkPendingLevel() {
+    if (!state.loaded || !state.hero || state.mode !== "view") return;
+    var lvl = currentLevel(), seen = getSeen();
+    if (seen == null) { setSeen(lvl); return; }
+    if (lvl > seen && heroTabVisible()) celebrate(seen, lvl);
+    else if (lvl < seen) setSeen(lvl);
+  }
+
   function todayLogs(goalId) {
     var today = localDate();
     return state.log.filter(function (l) { return l.goal_id === goalId && l.day === today; });
@@ -148,6 +161,7 @@
     } finally {
       state.loading = false;
       render();
+      checkPendingLevel();
     }
   }
 
@@ -407,6 +421,7 @@
     }
     var after = currentLevel();
     if (after > before) celebrate(before, after);
+    else setSeen(after);
   }
 
   function toggleHabit(g) {
@@ -560,6 +575,7 @@
   }
 
   function celebrate(from, to) {
+    setSeen(to);
     var dlg = document.getElementById("levelup-dialog");
     var items = [];
     for (var L = from + 1; L <= to; L++) items = items.concat(unlocksForLevel(L));
@@ -748,6 +764,7 @@
         var today = localDate();
         state.hero = await Store.saveHero({ look: state.draft, background: state.draftBg, last_visit: today, prev_visit: null });
         state.firstTime = false;
+        setSeen(currentLevel());
         state.visitSad = false;
         ui().toast("Герой создан! Добро пожаловать в квест");
       } else {
@@ -805,7 +822,14 @@
     /** Вызывается при открытии вкладки (после входа). */
     show: function () {
       if (!state.loaded && !state.loading) load();
-      else render();
+      else { render(); checkPendingLevel(); }
+    },
+    /** Баллы, начисленные вне вкладки (например, за раскраску): обновить и при необходимости отпраздновать. */
+    externalLog: function (row) {
+      if (!state.loaded || !row) return;
+      if (!state.log.some(function (l) { return l.id === row.id; })) state.log.push(row);
+      render();
+      checkPendingLevel();
     },
     /** Сброс при выходе из аккаунта. */
     reset: function () {

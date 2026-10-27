@@ -5,7 +5,7 @@
    После обновления файлов на хостинге увеличьте CACHE_VERSION. */
 "use strict";
 
-var CACHE_VERSION = "kvest-v3-2";
+var CACHE_VERSION = "kvest-v4-1";
 var SHELL = [
   "./",
   "./index.html",
@@ -16,6 +16,9 @@ var SHELL = [
   "./hero-art.js",
   "./hero.js",
   "./menu.js",
+  "./coloring-art.js",
+  "./diary.js",
+  "./coloring.js",
   "./app.js",
   "./pwa.js",
   "./offline.html",

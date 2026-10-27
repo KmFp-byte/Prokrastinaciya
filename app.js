@@ -212,6 +212,8 @@
       state.items = []; state.shopping = []; state.loaded = false; state.entered = false;
       if (window.KvestHero) window.KvestHero.reset();
       if (window.KvestMenu) window.KvestMenu.reset();
+      if (window.KvestDiary) window.KvestDiary.reset();
+      if (window.KvestColoring) window.KvestColoring.reset();
       renderAll();
       show("screen-auth");
       authView("login");
@@ -246,6 +248,7 @@
     renderAll();
     if (state.tab === "hero" && window.KvestHero) window.KvestHero.show();
     if (window.KvestMenu) window.KvestMenu.load();
+    if (state.tab === "diary" && window.KvestDiary) window.KvestDiary.show();
     await loadData();
   }
 
@@ -565,7 +568,7 @@
 
   /* ---------- вкладки ---------- */
 
-  var TABS = ["inventory", "shopping", "menu", "hero"];
+  var TABS = ["inventory", "shopping", "menu", "hero", "diary"];
 
   function setTab(tab, focus) {
     if (TABS.indexOf(tab) < 0) tab = "inventory";
@@ -580,6 +583,8 @@
     try { sessionStorage.setItem("kvest.tab", tab); } catch (e) { /* ignore */ }
     if (tab === "hero" && state.entered && window.KvestHero) window.KvestHero.show();
     if (tab === "menu" && state.entered && window.KvestMenu) window.KvestMenu.show();
+    if (tab === "diary" && state.entered && window.KvestDiary) window.KvestDiary.show();
+    if (tab !== "diary" && window.KvestDiary) window.KvestDiary.hide();
   }
 
   function bindTabs() {
@@ -797,6 +802,8 @@
         state.entered = false;
         if (window.KvestHero) window.KvestHero.reset();
         if (window.KvestMenu) window.KvestMenu.reset();
+        if (window.KvestDiary) window.KvestDiary.reset();
+        if (window.KvestColoring) window.KvestColoring.reset();
         show("screen-auth"); authView("login");
       }
     });

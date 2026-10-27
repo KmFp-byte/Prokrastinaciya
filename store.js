@@ -88,6 +88,9 @@
   var LS_DISHES = "kvest.demo.dishes";
   var LS_PLAN = "kvest.demo.plan";
   var LS_SKIPS = "kvest.demo.skips";
+  var LS_MOODS = "kvest.demo.moods";
+  var LS_DIARY = "kvest.demo.diary";
+  var LS_COLOR = "kvest.demo.colorings";
   var memory = {}; // запасной вариант, если localStorage недоступен
 
   function lsGet(k, fallback) {
@@ -314,6 +317,52 @@
         lsSet(LS_SKIPS, skips);
       }
       return { week_start: weekStart, name: name };
+    },
+
+    /* --- ежедневник (v4) --- */
+    async listMoods(from, to) {
+      return lsGet(LS_MOODS, []).filter(function (m) { return m.day >= from && m.day <= to; });
+    },
+
+    async setMood(day, mood, note) {
+      var rows = lsGet(LS_MOODS, []).filter(function (m) { return m.day !== day; });
+      var row = { user_id: "demo", day: day, mood: mood, note: note || null };
+      rows.push(row);
+      lsSet(LS_MOODS, rows);
+      return row;
+    },
+
+    async clearMood(day) {
+      lsSet(LS_MOODS, lsGet(LS_MOODS, []).filter(function (m) { return m.day !== day; }));
+    },
+
+    async getDiary(day) {
+      return lsGet(LS_DIARY, []).filter(function (e) { return e.day === day; })[0] || null;
+    },
+
+    async saveDiary(day, f) {
+      var rows = lsGet(LS_DIARY, []).filter(function (e) { return e.day !== day; });
+      var row = { user_id: "demo", day: day, body: f.body || "", background: f.background || null, frame: f.frame || null,
+        stickers: f.stickers || [], updated_at: new Date().toISOString() };
+      rows.push(row);
+      lsSet(LS_DIARY, rows);
+      return row;
+    },
+
+    async listDiaryDays(from, to) {
+      return lsGet(LS_DIARY, []).filter(function (e) {
+        return e.day >= from && e.day <= to && ((e.body && e.body.trim()) || (e.stickers && e.stickers.length));
+      }).map(function (e) { return { day: e.day }; });
+    },
+
+    async listColorings() { return lsGet(LS_COLOR, []); },
+
+    async saveColoring(pictureId, f) {
+      var rows = lsGet(LS_COLOR, []);
+      var cur = rows.filter(function (r) { return r.picture_id === pictureId; })[0] || { user_id: "demo", picture_id: pictureId, filled: "", completed_at: null };
+      var row = Object.assign({}, cur, f);
+      lsSet(LS_COLOR, rows.filter(function (r) { return r.picture_id !== pictureId; }).concat([row]));
+      return row;
     }
   };
 
@@ -527,8 +576,56 @@
       check(await sb.from("menu_skips").upsert({ user_id: currentUser.id, week_start: weekStart, name: name },
         { onConflict: "user_id,week_start,name", ignoreDuplicates: true }));
       return { week_start: weekStart, name: name };
+    },
+
+    /* --- ежедневник (v4) --- */
+    async listMoods(from, to) {
+      return check(await sb.from("moods").select("day,mood,note").gte("day", from).lte("day", to));
+    },
+
+    async setMood(day, mood, note) {
+      var uid = await requireUser();
+      return check(await sb.from("moods").upsert({ user_id: uid, day: day, mood: mood, note: note || null }, { onConflict: "user_id,day" }).select().single());
+    },
+
+    async clearMood(day) {
+      check(await sb.from("moods").delete().eq("day", day));
+    },
+
+    async getDiary(day) {
+      return check(await sb.from("diary_entries").select("*").eq("day", day).maybeSingle());
+    },
+
+    async saveDiary(day, f) {
+      var uid = await requireUser();
+      return check(await sb.from("diary_entries").upsert({
+        user_id: uid, day: day, body: f.body || "", background: f.background || null, frame: f.frame || null,
+        stickers: f.stickers || [], updated_at: new Date().toISOString()
+      }, { onConflict: "user_id,day" }).select().single());
+    },
+
+    async listDiaryDays(from, to) {
+      var rows = check(await sb.from("diary_entries").select("day,body,stickers").gte("day", from).lte("day", to));
+      return (rows || []).filter(function (e) { return (e.body && e.body.trim()) || (e.stickers && e.stickers.length); })
+        .map(function (e) { return { day: e.day }; });
+    },
+
+    async listColorings() {
+      return check(await sb.from("colorings").select("picture_id,filled,completed_at"));
+    },
+
+    async saveColoring(pictureId, f) {
+      var uid = await requireUser();
+      var row = Object.assign({ user_id: uid, picture_id: pictureId }, f);
+      return check(await sb.from("colorings").upsert(row, { onConflict: "user_id,picture_id" }).select().single());
     }
   };
+
+  async function requireUser() {
+    if (!currentUser) await remote.getSession();
+    if (!currentUser) throw KvestError("auth", "no session");
+    return currentUser.id;
+  }
 
   /* ---------- public API ---------- */
 
@@ -625,6 +722,19 @@
     clearPlan: function (day) { return backend.clearPlan(day); },
     listSkips: function (weekStart) { return backend.listSkips(weekStart); },
     addSkip: function (weekStart, name) { return backend.addSkip(weekStart, name); },
+
+    /* ежедневник (v4) */
+    listMoods: function (from, to) { return backend.listMoods(from, to); },
+    /** mood — латинский ключ: joy, sadness, anger, anxiety, tiredness, calm, irritation, inspiration, love */
+    setMood: function (day, mood, note) { return backend.setMood(day, mood, note); },
+    clearMood: function (day) { return backend.clearMood(day); },
+    getDiary: function (day) { return backend.getDiary(day); },
+    /** { body, background, frame, stickers: [{ id, x, y, r }] } — upsert по дню */
+    saveDiary: function (day, f) { return backend.saveDiary(day, f); },
+    listDiaryDays: function (from, to) { return backend.listDiaryDays(from, to); },
+    listColorings: function () { return backend.listColorings(); },
+    /** { filled: строка из "0"/"1" по клеткам, completed_at } — upsert по картинке */
+    saveColoring: function (pictureId, f) { return backend.saveColoring(pictureId, f); },
 
     /** Уменьшает фото до 800px по длинной стороне и сжимает в JPEG 0.8. */
     async downscale(file, maxSide, quality) {

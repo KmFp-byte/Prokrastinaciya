@@ -108,6 +108,12 @@
       '<path d="M8 31h48c0 13-10 23-24 23S8 44 8 31z" fill="' + C.pink + '"/>' +
       '<rect x="22" y="53" width="20" height="5" rx="2.5" fill="' + C.pinkD + '"/>' +
       face(32, 40, 1),
+    book:
+      '<path d="M8 14c8-3 16-2 24 3 8-5 16-6 24-3v34c-8-3-16-2-24 3-8-5-16-6-24-3z" fill="' + C.pinkL + '"/>' +
+      '<path d="M32 17v34" stroke="' + C.pinkD + '" stroke-width="2"/>' +
+      '<path d="M12 22q8-2 15 1M12 28q8-2 15 1M37 23q7-3 15-1M37 29q7-3 15-1" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/>' +
+      '<path d="M44 34l3 6-3 3-3-3z" fill="' + C.mint + '"/>' +
+      '<path d="M44 8v14l4-3 4 3V8z" fill="' + C.mint + '"/>',
     dice:
       '<rect x="10" y="10" width="44" height="44" rx="12" fill="#fff" stroke="' + C.pinkL + '" stroke-width="3"/>' +
       '<circle cx="22" cy="22" r="4" fill="' + C.pink + '"/><circle cx="42" cy="22" r="4" fill="' + C.mint + '"/>' +

@@ -126,22 +126,26 @@
     <nav class="tabs" role="tablist" aria-label="Разделы">
       <button type="button" class="tab" role="tab" id="tab-inventory" aria-controls="panel-inventory" aria-selected="true" data-tab="inventory">
         <span class="tab-art" data-art="chest"></span>
-        <span>Запасы</span>
+        <span class="tab-label">Запасы</span>
         <span class="tab-count" id="count-inventory">0</span>
       </button>
       <button type="button" class="tab" role="tab" id="tab-shopping" aria-controls="panel-shopping" aria-selected="false" tabindex="-1" data-tab="shopping">
         <span class="tab-art" data-art="bag"></span>
-        <span>Покупки</span>
+        <span class="tab-label">Покупки</span>
         <span class="tab-count tab-count-hot" id="count-shopping">0</span>
       </button>
       <button type="button" class="tab" role="tab" id="tab-menu" aria-controls="panel-menu" aria-selected="false" tabindex="-1" data-tab="menu">
         <span class="tab-art" data-art="bowl"></span>
-        <span>Меню</span>
+        <span class="tab-label">Меню</span>
       </button>
       <button type="button" class="tab" role="tab" id="tab-hero" aria-controls="panel-hero" aria-selected="false" tabindex="-1" data-tab="hero">
         <span class="tab-art" data-art="star"></span>
-        <span>Герой</span>
+        <span class="tab-label">Герой</span>
         <span class="tab-count tab-count-hero" id="count-hero" hidden></span>
+      </button>
+      <button type="button" class="tab" role="tab" id="tab-diary" aria-controls="panel-diary" aria-selected="false" tabindex="-1" data-tab="diary">
+        <span class="tab-art" data-art="book"></span>
+        <span class="tab-label">Ежедневник</span>
       </button>
     </nav>
 
@@ -324,6 +328,128 @@
           </div>
         </div>
       </section>
+
+      <!-- Ежедневник (v4) -->
+      <section id="panel-diary" class="panel" role="tabpanel" aria-labelledby="tab-diary" hidden>
+        <div class="diary-seg" role="tablist" aria-label="Разделы ежедневника">
+          <button type="button" class="seg-btn" role="tab" id="seg-mood" data-seg="mood" aria-selected="true">Настроение</button>
+          <button type="button" class="seg-btn" role="tab" id="seg-entry" data-seg="entry" aria-selected="false" tabindex="-1">Записи</button>
+          <button type="button" class="seg-btn" role="tab" id="seg-color" data-seg="color" aria-selected="false" tabindex="-1">Раскраски</button>
+        </div>
+        <div id="diary-loading" class="hero-loading px-box" hidden>
+          <span class="hero-loading-art" data-art="book"></span>
+          <p>Открываем ежедневник…</p>
+        </div>
+        <div id="diary-error" class="inline-error px-box" hidden>
+          <p>Не удалось загрузить ежедневник.</p>
+          <button type="button" class="btn btn-sm" id="diary-retry">Повторить</button>
+        </div>
+
+        <!-- Настроение -->
+        <div id="seg-panel-mood" class="mood-layout" role="tabpanel" aria-labelledby="seg-mood" hidden>
+          <section class="mood-today px-box" aria-labelledby="mood-q">
+            <h2 class="hero-title" id="mood-q">Как ты сегодня?</h2>
+            <p class="hero-sub" id="mood-day-label"></p>
+            <div class="mood-picker" id="mood-picker" role="radiogroup" aria-labelledby="mood-q"></div>
+            <div class="mood-note-row">
+              <label for="mood-note" class="sr-only">Заметка к настроению</label>
+              <input id="mood-note" type="text" maxlength="140" autocomplete="off" placeholder="Пара слов о дне (необязательно)">
+              <span id="mood-saved" class="save-ind" aria-live="polite"></span>
+            </div>
+            <div class="mood-actions">
+              <button type="button" class="btn btn-ghost btn-sm" id="mood-open-entry">Открыть запись этого дня</button>
+              <button type="button" class="link-btn" id="mood-clear" hidden>Убрать настроение</button>
+            </div>
+          </section>
+          <section class="mood-cal px-box" aria-labelledby="cal-title">
+            <div class="cal-head">
+              <button type="button" class="icon-btn" id="cal-prev" aria-label="Предыдущий месяц"><span aria-hidden="true">‹</span></button>
+              <h3 class="sec-title" id="cal-title"></h3>
+              <button type="button" class="icon-btn" id="cal-next" aria-label="Следующий месяц"><span aria-hidden="true">›</span></button>
+            </div>
+            <div class="cal-grid" id="cal-grid"></div>
+            <div class="mood-legend" id="mood-legend" aria-label="Цвета настроений"></div>
+          </section>
+          <section class="mood-summary px-box" aria-labelledby="sum-title">
+            <h3 class="sec-title" id="sum-title">Итоги месяца</h3>
+            <div id="mood-summary"></div>
+          </section>
+        </div>
+
+        <!-- Записи -->
+        <div id="seg-panel-entry" role="tabpanel" aria-labelledby="seg-entry" hidden>
+          <div class="entry-nav px-box">
+            <button type="button" class="icon-btn" id="entry-prev" aria-label="Предыдущий день"><span aria-hidden="true">‹</span></button>
+            <div class="entry-nav-mid">
+              <h2 class="entry-date" id="entry-date"></h2>
+              <div id="entry-mood"></div>
+            </div>
+            <button type="button" class="icon-btn" id="entry-next" aria-label="Следующий день"><span aria-hidden="true">›</span></button>
+            <button type="button" class="btn btn-ghost btn-sm entry-today" id="entry-today">Сегодня</button>
+          </div>
+          <div class="entry-layout">
+            <div class="entry-main">
+              <div id="entry-card" class="entry-card bg-white frame-none">
+                <label for="entry-text" class="sr-only">Текст записи</label>
+                <textarea id="entry-text" class="entry-text" maxlength="5000"></textarea>
+                <div id="entry-stickers" class="sticker-layer"></div>
+              </div>
+              <p id="entry-saved" class="save-ind" aria-live="polite"></p>
+            </div>
+            <aside class="entry-tools px-box" aria-label="Оформление записи">
+              <h3 class="tool-title">Фон</h3>
+              <div id="entry-bgs" class="swatches" role="radiogroup" aria-label="Фон"></div>
+              <h3 class="tool-title">Рамка</h3>
+              <div id="entry-frames" class="frame-picks" role="radiogroup" aria-label="Рамка"></div>
+              <h3 class="tool-title">Стикеры</h3>
+              <div id="entry-sticker-palette" class="sticker-palette"></div>
+              <p class="tool-hint">Нажми на стикер — он появится на странице. Перетащи, чтобы подвинуть; нажми на наклеенный, чтобы убрать.</p>
+            </aside>
+          </div>
+        </div>
+
+        <!-- Раскраски -->
+        <div id="seg-panel-color" role="tabpanel" aria-labelledby="seg-color" hidden>
+          <div id="color-gallery" class="color-gallery"></div>
+          <div id="color-editor" class="color-editor" hidden>
+            <div class="color-top px-box">
+              <button type="button" class="btn btn-ghost btn-sm" id="color-back">← Все картинки</button>
+              <h2 class="color-title" id="color-title"></h2>
+              <div class="color-prog">
+                <span class="bar"><span id="color-progress-bar"></span></span>
+                <span id="color-progress" class="color-pct">0%</span>
+              </div>
+            </div>
+            <div class="color-work">
+              <div class="color-stage px-box">
+                <div id="color-stage-inner" class="color-stage-inner">
+                  <canvas id="color-canvas" class="color-canvas" aria-label="Раскраска: выбери цвет и нажимай на клетки с этим номером"></canvas>
+                  <p id="zoom-hint" class="zoom-hint">Приблизь картинку, чтобы увидеть номера</p>
+                </div>
+                <div class="zoom-ctrls">
+                  <button type="button" class="icon-btn" id="zoom-in" aria-label="Приблизить"><span aria-hidden="true">+</span></button>
+                  <button type="button" class="icon-btn" id="zoom-out" aria-label="Отдалить"><span aria-hidden="true">−</span></button>
+                  <button type="button" class="icon-btn" id="zoom-fit" aria-label="Показать целиком"><span aria-hidden="true">⤢</span></button>
+                  <button type="button" class="icon-btn" id="pan-toggle" aria-pressed="false" aria-label="Режим перемещения" title="Двигать картинку одним пальцем"><span aria-hidden="true">✋</span></button>
+                </div>
+              </div>
+              <div class="color-side px-box">
+                <h3 class="tool-title">Цвета</h3>
+                <div id="color-palette" class="color-palette"></div>
+                <p class="tool-hint">Выбери цвет и закрашивай клетки с его номером — касанием или проводя пальцем/мышкой. Щипок или колёсико — масштаб, два пальца или ✋ — двигать.</p>
+                <button type="button" class="link-btn" id="color-reset">Начать заново</button>
+                <div id="color-reset-confirm" class="confirm" hidden>
+                  <p>Стереть всю раскраску этой картинки?</p>
+                  <div class="confirm-actions">
+                    <button type="button" class="btn btn-danger btn-sm" id="color-reset-yes">Да, стереть</button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="color-reset-no">Нет</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
 
     <footer class="footer">
@@ -402,6 +528,19 @@
     </div>
   </dialog>
 
+  <!-- Раскраска готова -->
+  <dialog id="color-done" class="dialog levelup" aria-labelledby="color-done-title">
+    <div class="dialog-body levelup-body">
+      <div class="confetti" id="color-confetti" aria-hidden="true"></div>
+      <p class="levelup-kicker">Раскраска готова!</p>
+      <canvas id="color-done-canvas" class="pixel-canvas color-done-canvas" role="img" aria-label="Готовая картинка"></canvas>
+      <h2 id="color-done-title" class="dialog-title"></h2>
+      <p id="color-done-text" class="hero-sub"></p>
+      <button type="button" class="btn btn-primary btn-wide" id="color-done-ok">Любоваться</button>
+      <button type="button" class="link-btn" id="color-done-gallery">К другим картинкам</button>
+    </div>
+  </dialog>
+
   <!-- Подсказка для iPhone (Safari) -->
   <div id="ios-hint" class="ios-hint" role="note" hidden>
     <span class="ios-hint-art" data-art="house"></span>
@@ -417,6 +556,9 @@
   <script src="hero-art.js"></script>
   <script src="hero.js"></script>
   <script src="menu.js"></script>
+  <script src="coloring-art.js"></script>
+  <script src="diary.js"></script>
+  <script src="coloring.js"></script>
   <script src="app.js"></script>
   <script src="pwa.js"></script>
 </body>
